@@ -1,0 +1,10 @@
+# Python stuff
+.ipynb_checkpoints
+__pycache__
+
+# Too large datasets
+data/MV_Pirkanmaa.gpkg
+data/MV_Pohjois-Pohjanmaa.gpkg
+
+# Outputs
+outputs/*
