@@ -110,18 +110,25 @@ def build_stand_params(
     Returns None if:
     - sfc=2, because there are few datapoints
     - dominant species=3 (not pine nor spruce)
+    - Spruce is the dominant species of a site with sfc 3
     """
     stand_data = stand_data_document.stands[stand_id]
 
     canopy_layer_allometry = CanopyLayerAllometry.with_single_allometry_per_layer(
-        # Ignore other canopy layers; simulate as if only dominant layer was present
-        layers=stand_data.allometry_file_per_layer["dominant"],
+        layers=stand_data.allometry_file_per_layer,
         n=n_cols,
     )
     if stand_data.site_fertility_class == 2:
         return None
 
+    # Only pine and spruce can be the dominant species
     if stand_data.allometry_file_per_layer["dominant"].species_id == 3:
+        return None
+
+    # Removing spruces as dominant species in sites with fertility class = 2 or 3
+    if stand_data.allometry_file_per_layer[
+        "dominant"
+    ].species_id == 2 and stand_data.site_fertility_class in {2, 3}:
         return None
 
     return StandParams(
@@ -206,19 +213,17 @@ def create_simulation_parameters(
             BASE_SCENARIOS = ("control", "DNM_80", "ash_fertilization")
 
             for scenario_name in BASE_SCENARIOS:
-                # TODO: fix this 0.0 default
-                ditch_depth = 0.0
-                if scenario_name == "DNM_80":
-                    ditch_depth = -0.80
+                ditch_depth = -0.60
+                if scenario_name == "DNM_85":
+                    ditch_depth = -0.85
 
-                # TODO: fix fertilization
                 fertilization_params = None
                 if scenario_name == "ash_fertilization":
                     fertilization_params = AshFertilizationParameters(
                         application_year=INITIAL_YEAR + 10,
-                        fertilizer_dose=2.0,
-                        K_in_ash=1.5,
-                        P_in_ash=0.4,
+                        fertilizer_dose=5000,
+                        K_in_ash=100,
+                        P_in_ash=45,
                     )
 
                 simulation_parameters.append(
