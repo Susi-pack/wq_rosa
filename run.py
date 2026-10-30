@@ -266,7 +266,7 @@ def create_simulation_parameters(
                             weather_parameters=WeatherParams(
                                 FMI_weather_filepath=data_dir_for_project(PROJECT_DIR)
                                 / "weather"
-                                / weather_files(maakunta),
+                                / weather_files[maakunta],
                             ),
                             simulation_config=SimulationConfig(
                                 start_date=datetime.datetime(INITIAL_YEAR, 1, 1),
