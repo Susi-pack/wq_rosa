@@ -240,7 +240,7 @@ def create_simulation_parameters(
     simulation_parameters: list[SimulationParams] = []
 
     N_SOIL_COLS = 20
-    weather_files = {"pirkanmaa": "pirkanmaa.csv", "pohjanmaa": "pohjois_pohjanmaa.csv"}
+    weather_files = {"pirkanmaa": "pirkanmaa.csv", "pohjanmaa": "pohjanmaa.csv"}
 
     for stand_id, stand_data in stand_data_document.stands.items():
         stand_params = build_stand_params(
