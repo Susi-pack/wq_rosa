@@ -18,7 +18,7 @@ altitude = 100 # REQUIRED
 
 # Degree-day-years, cumulative temperature sum.
 # Enforced range: [500, 2000]
-ddy = 1300 # REQUIRED
+ddy = 1270 # REQUIRED
 
 # --- Optional -- shown here with the same values parse_extraction_config()
 # --- would apply anyway if the key were simply absent from this file.
@@ -35,7 +35,7 @@ fertilityclass_filter = [2, 3, 4, 5]
 # tracks, and the age range/step of the growth trajectory it returns.
 n_trees = 20
 start_year = 5
-end_year = 80
+end_year = 150
 step_years = 5
 
 # --- Optional: dense young stand scaling (off by default) ---
