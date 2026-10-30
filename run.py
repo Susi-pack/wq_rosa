@@ -1,12 +1,9 @@
 # %% imports
-from typing import Sequence
 from dataclasses import dataclass, replace
 from susi.io.load_output_data import StandID
 import datetime
 import argparse
 from multiprocessing import Pool
-import numpy as np
-from scipy.optimize import root_scalar
 
 from susi.core.susi_main import Susi
 from susi.io.execution_config import MultipleSusis, SimulationParams
