@@ -5,7 +5,7 @@
 #SBATCH --job-name=susi_minimal_parallel
 #SBATCH --account=project_2020769
 #SBATCH --partition=small
-#SBATCH --time=00:40:00
+#SBATCH --time=00:50:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 # The only place the number of parallel processes is set.
