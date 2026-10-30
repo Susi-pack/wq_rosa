@@ -54,7 +54,7 @@ STAND_DATA_FILEPATH_PIRKANMAA = (
     inputs_dir_for_project(PROJECT_DIR) / "stand_data_pirkanmaa.json"
 )
 STAND_DATA_FILEPATH_POHJANMAA = (
-    inputs_dir_for_project(PROJECT_DIR) / "stand_data_pohjois_pohjanmaa.json"
+    inputs_dir_for_project(PROJECT_DIR) / "stand_data_pohjanmaa.json"
 )
 
 # %% Load stand data
