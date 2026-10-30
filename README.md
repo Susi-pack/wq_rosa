@@ -23,7 +23,7 @@ Every choice made in the simulation should be reflected here.
     - When present, both dominant and subdominant canopylayers are simulated
     - There are stands with spruce in sfc 4 and 5. They are removed from the simulation
     - Only pine and spruce are allowed to be the dominant species
-    - Removes spruce stands in fertility class {2,3}; pines can be in any sfc
+    - Removes spruce stands in fertility class {4,5}; pines can be in any sfc
 - Scenarios:
     - See the `create_scenarios()` function for all the ditch and fertilization choices.
 
