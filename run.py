@@ -112,7 +112,7 @@ def build_stand_params(
     Returns None if:
     - sfc=2, because there are few datapoints
     - dominant species=3 (not pine nor spruce)
-    - Spruce is the dominant species of a site with sfc 3
+    - Spruce is the dominant species of a site with sfc 4 or 5
     """
     stand_data = stand_data_document.stands[stand_id]
 
@@ -127,10 +127,10 @@ def build_stand_params(
     if stand_data.allometry_file_per_layer["dominant"].species_id == 3:
         return None
 
-    # Removing spruces as dominant species in sites with fertility class = 2 or 3
+    # Removing spruces as dominant species in sites with fertility class = 4 or 5
     if stand_data.allometry_file_per_layer[
         "dominant"
-    ].species_id == 2 and stand_data.site_fertility_class in {2, 3}:
+    ].species_id == 2 and stand_data.site_fertility_class in {4, 5}:
         return None
 
     return StandParams(
