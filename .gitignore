@@ -2,9 +2,13 @@
 .ipynb_checkpoints
 __pycache__
 
+# data
 # Too large datasets
 data/MV_Pirkanmaa.gpkg
 data/MV_Pohjois-Pohjanmaa.gpkg
+
+# LLM generated code to get weather file
+data/weather/build_weather.py
 
 # Outputs
 outputs/*

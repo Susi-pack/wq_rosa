@@ -147,8 +147,8 @@ def build_stand_params(
 
 # %% Create the scenarios
 
-INITIAL_YEAR = 2004
-END_YEAR = 2020
+INITIAL_YEAR = 1975
+END_YEAR = 2025
 
 
 @dataclass(frozen=True)
@@ -240,6 +240,7 @@ def create_simulation_parameters(
     simulation_parameters: list[SimulationParams] = []
 
     N_SOIL_COLS = 20
+    weather_files = {"pirkanmaa": "pirkanmaa.csv", "pohjanmaa": "pohjois_pohjanmaa.csv"}
 
     for stand_id, stand_data in stand_data_document.stands.items():
         stand_params = build_stand_params(
@@ -265,7 +266,7 @@ def create_simulation_parameters(
                             weather_parameters=WeatherParams(
                                 FMI_weather_filepath=data_dir_for_project(PROJECT_DIR)
                                 / "weather"
-                                / "CFw.csv",
+                                / weather_files(maakunta),
                             ),
                             simulation_config=SimulationConfig(
                                 start_date=datetime.datetime(INITIAL_YEAR, 1, 1),
