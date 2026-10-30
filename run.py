@@ -1,4 +1,6 @@
 # %% imports
+from typing import Sequence
+from dataclasses import dataclass, replace
 from susi.io.load_output_data import StandID
 import datetime
 import argparse
@@ -47,7 +49,7 @@ parser.add_argument(
 cli_args = parser.parse_args()
 
 # %% Constants
-PROJECT_DIR = project_dir("phase4")
+PROJECT_DIR = project_dir("wq_rosa")
 STAND_DATA_FILEPATH_PIRKANMAA = (
     inputs_dir_for_project(PROJECT_DIR) / "stand_data_pirkanmaa.json"
 )
@@ -145,60 +147,99 @@ def build_stand_params(
 
 # %% Create the scenarios
 
+INITIAL_YEAR = 2004
+END_YEAR = 2020
 
-def predict_ditch_depth(drainage_age, peat_thickness=0.61, ditch_bed_slope=0.62):
-    """
-    Predict ditch shallowing by Hökkä et al. 2020, Baltic Forestry 26(2), article id 453. https://doi.org/10.46490/BF453
-    """
-    base = (
-        49.139
-        + 23.981 * np.power(drainage_age, -0.2)
-        - 0.343 * drainage_age
-        - 0.404 * drainage_age * peat_thickness
-        + 17.961 * peat_thickness
-        + 3.224 * ditch_bed_slope
+
+@dataclass(frozen=True)
+class Scenario:
+    name: str
+    ditch_depth_east: float
+    ditch_depth_west: float
+    ditch_depth_20y_east: float
+    ditch_depth_20y_west: float
+    fertilization: AshFertilizationParameters | None
+
+
+def create_scenarios() -> list[Scenario]:
+    base_scenarios: list[Scenario] = [
+        Scenario(
+            name="DD60-60_NS",
+            ditch_depth_east=-0.6,
+            ditch_depth_west=-0.6,
+            ditch_depth_20y_east=-0.6,
+            ditch_depth_20y_west=-0.6,
+            fertilization=None,
+        ),
+        Scenario(
+            name="DD60-60_S",
+            ditch_depth_east=-0.6,
+            ditch_depth_west=-0.6,
+            ditch_depth_20y_east=-0.3,
+            ditch_depth_20y_west=-0.3,
+            fertilization=None,
+        ),
+        Scenario(
+            name="DD90-90_S",
+            ditch_depth_east=-0.9,
+            ditch_depth_west=-0.9,
+            ditch_depth_20y_east=-0.6,
+            ditch_depth_20y_west=-0.6,
+            fertilization=None,
+        ),
+        Scenario(
+            name="WM30-30_S",
+            ditch_depth_east=-0.3,
+            ditch_depth_west=-0.3,
+            ditch_depth_20y_east=-0.2,
+            ditch_depth_20y_west=-0.2,
+            fertilization=None,
+        ),
+        Scenario(
+            name="WM60-10_S",
+            ditch_depth_east=-0.6,
+            ditch_depth_west=-0.1,
+            ditch_depth_20y_east=-0.4,
+            ditch_depth_20y_west=-0.1,
+            fertilization=None,
+        ),
+        Scenario(
+            name="WM30-10_S",
+            ditch_depth_east=-0.3,
+            ditch_depth_west=-0.1,
+            ditch_depth_20y_east=-0.2,
+            ditch_depth_20y_west=-0.1,
+            fertilization=None,
+        ),
+    ]
+    # Add ash fertilization to each scenario:
+    # Each base scenario gets a fertilized twin
+    fertilization_params = AshFertilizationParameters(
+        application_year=INITIAL_YEAR,
+        fertilizer_dose=4000,
+        K_in_ash=120,
+        P_in_ash=45,
     )
-    if drainage_age > 35:
-        base += 0.00134 * np.power(drainage_age, 2)
-    return base
 
-
-def estimate_drainage_age(ditch_depth_cm, peat_thickness=0.61, ditch_bed_slope=0.62):
-    # Ditch depth difference at a given age
-    def ditch_depth_difference(age):
-        return (
-            predict_ditch_depth(age, peat_thickness, ditch_bed_slope) - ditch_depth_cm
+    ash_scenarios = [
+        replace(
+            scenario,
+            name=f"{scenario.name}_ash",
+            fertilization=fertilization_params,
         )
+        for scenario in base_scenarios
+    ]
 
-    # Try solving in a reasonable range of drainage ages
-    solution = root_scalar(ditch_depth_difference, bracket=[1, 100], method="brentq")
-
-    if solution.converged:
-        return np.round(solution.root)
-    else:
-        return None
-
-
-def get_ditch_shallowing(ditch_depth, time=20):
-    if ditch_depth <= -0.27:
-        est_drainage_age = estimate_drainage_age((-1) * 100 * ditch_depth)
-        ditch_shallowing = predict_ditch_depth(est_drainage_age + time)
-        return np.round((-1) * 0.01 * ditch_shallowing, 2)
-    else:
-        return round(ditch_depth * 0.8, 2)
+    return base_scenarios + ash_scenarios
 
 
 def create_simulation_parameters(
-    maakunta: str,
-    stand_data_document: StandDataDocument,
+    maakunta: str, stand_data_document: StandDataDocument, scenarios: list[Scenario]
 ) -> list[SimulationParams]:
 
     simulation_parameters: list[SimulationParams] = []
 
     N_SOIL_COLS = 20
-    # TODO: fix years
-    INITIAL_YEAR = 2004
-    END_YEAR = 2020
 
     for stand_id, stand_data in stand_data_document.stands.items():
         stand_params = build_stand_params(
@@ -210,29 +251,14 @@ def create_simulation_parameters(
         if stand_params is None:
             continue
         else:
-            BASE_SCENARIOS = ("control", "DNM_80", "ash_fertilization")
-
-            for scenario_name in BASE_SCENARIOS:
-                ditch_depth = -0.60
-                if scenario_name == "DNM_85":
-                    ditch_depth = -0.85
-
-                fertilization_params = None
-                if scenario_name == "ash_fertilization":
-                    fertilization_params = AshFertilizationParameters(
-                        application_year=INITIAL_YEAR + 10,
-                        fertilizer_dose=5000,
-                        K_in_ash=100,
-                        P_in_ash=45,
-                    )
-
+            for scenario in scenarios:
                 simulation_parameters.append(
                     SimulationParams(
                         metadata=SimulationMetaData(
                             project_dir=PROJECT_DIR,
                             run_id="run_01",
                             stand_id=stand_id,
-                            scenario_id=scenario_name,
+                            scenario_id=scenario.name,
                             tags={"region": maakunta},
                         ),
                         susi_params=SusiParams(
@@ -250,9 +276,7 @@ def create_simulation_parameters(
                             organic_layer_parameters=OrganicLayerParams(),
                             output_parameters=OutputParams(),
                             photo_parameters=get_photo_parameters_by_location(
-                                location=LocationsForPhotoParams(
-                                    "Hyytiala"
-                                )  # Change for Oulu area!
+                                location=LocationsForPhotoParams("All_data")
                             ),
                             site_parameters=SiteParams(
                                 L=40.0,
@@ -264,14 +288,10 @@ def create_simulation_parameters(
                                 smc="Peatland",
                                 nLyrs=60,
                                 dzLyr=0.05,
-                                ditch_depth_west=[ditch_depth],
-                                ditch_depth_east=[ditch_depth],
-                                ditch_depth_20y_west=[
-                                    get_ditch_shallowing(ditch_depth, time=20)
-                                ],
-                                ditch_depth_20y_east=[
-                                    get_ditch_shallowing(ditch_depth, time=20)
-                                ],
+                                ditch_depth_west=[scenario.ditch_depth_west],
+                                ditch_depth_east=[scenario.ditch_depth_east],
+                                ditch_depth_20y_west=[scenario.ditch_depth_20y_west],
+                                ditch_depth_20y_east=[scenario.ditch_depth_20y_east],
                                 scenario_name=["deprecated"],  # kasvunlisaykset
                                 drain_age=50.0,
                                 initial_h=-0.2,
@@ -296,7 +316,7 @@ def create_simulation_parameters(
                                 depoN=4.0,
                                 depoP=0.1,
                                 depoK=1.0,
-                                fertilization=fertilization_params,
+                                fertilization=scenario.fertilization,
                                 peat_temperature=PeatTemperatureParams(),
                             ),
                         ),
@@ -308,15 +328,19 @@ def create_simulation_parameters(
 # %%
 
 # Finally, create the list of parameters that will go into the susi simulation
+scenarios = create_scenarios()
 pirkanmaa_parameters = create_simulation_parameters(
-    maakunta="pirkanmaa", stand_data_document=stand_data_document_pirkanmaa
+    maakunta="pirkanmaa",
+    stand_data_document=stand_data_document_pirkanmaa,
+    scenarios=scenarios,
 )
 pohjanmaa_parameters = create_simulation_parameters(
-    maakunta="pohjanmaa", stand_data_document=stand_data_document_pohjanmaa
+    maakunta="pohjanmaa",
+    stand_data_document=stand_data_document_pohjanmaa,
+    scenarios=scenarios,
 )
 
-# TODO: fix this
-all_parameters = pirkanmaa_parameters[:30] + pohjanmaa_parameters[:30]
+all_parameters = pirkanmaa_parameters + pohjanmaa_parameters
 
 
 execution_config = MultipleSusis(
