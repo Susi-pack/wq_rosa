@@ -13,3 +13,6 @@ data/weather/build_weather.py
 # Outputs
 outputs/*
 !projects/.gitkeep
+
+# CSC stuff
+slurm-*
