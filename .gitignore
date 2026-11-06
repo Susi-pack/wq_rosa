@@ -12,7 +12,7 @@ data/weather/build_weather.py
 
 # Outputs
 outputs/*
-!projects/.gitkeep
+!outputs/.gitkeep
 
 # CSC stuff
 slurm-*
