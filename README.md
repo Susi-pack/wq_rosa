@@ -1,7 +1,5 @@
 Water quality simulations for the paper led by Rosa.
 
-[See paper here](https://docs.google.com/document/d/1jWefnUYo681QVpAxldnVLJbVBvlaG7_vRVIawxhQDVQ/edit?usp=sharing)
-
 ## How to use this repo
 This is a project under `susi_26/projects/`.
 Clone this repo under that folder and you should be able to run it!
